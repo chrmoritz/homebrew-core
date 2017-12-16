@@ -24,6 +24,7 @@ class Node < Formula
   depends_on "pkg-config" => :build
   depends_on "icu4c" => :recommended
   depends_on "openssl" => :optional
+  depends_on "nghttp2" => :optional # or :recommended
 
   # Per upstream - "Need g++ 4.8 or clang++ 3.4".
   fails_with :clang if MacOS.version <= :snow_leopard
@@ -47,6 +48,7 @@ class Node < Formula
     args << "--debug" if build.with? "debug"
     args << "--with-intl=system-icu" if build.with? "icu4c"
     args << "--shared-openssl" if build.with? "openssl"
+    args << "--shared-nghttp2" if build.with? "nghttp2"
     args << "--tag=head" if build.head?
 
     system "./configure", *args
