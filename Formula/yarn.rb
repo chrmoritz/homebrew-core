@@ -12,8 +12,12 @@ class Yarn < Formula
 
   def install
     libexec.install Dir["*"]
-    (bin/"yarn").write_env_script "#{libexec}/bin/yarn.js", :PREFIX => HOMEBREW_PREFIX
-    (bin/"yarnpkg").write_env_script "#{libexec}/bin/yarn.js", :PREFIX => HOMEBREW_PREFIX
+    (bin/"yarn").write_env_script "#{libexec}/bin/yarn.js",
+      :PREFIX => HOMEBREW_PREFIX,
+      :NPM_CONFIG_PYTHON => Formula["python@2"].opt_bin/"python2"
+    (bin/"yarnpkg").write_env_script "#{libexec}/bin/yarn.js",
+      :PREFIX => HOMEBREW_PREFIX,
+      :NPM_CONFIG_PYTHON => Formula["python@2"].opt_bin/"python2"
     inreplace "#{libexec}/package.json", '"installationMethod": "tar"', '"installationMethod": "homebrew"'
   end
 
