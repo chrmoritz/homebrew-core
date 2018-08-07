@@ -21,112 +21,112 @@ class V8 < Formula
 
   needs :cxx11
 
-  resource "v8__third_party__icu" do
+  resource "v8/third_party/icu" do
     url "https://chromium.googlesource.com/chromium/deps/icu.git",
       :revision => "f61e46dbee9d539a32551493e3bcc1dea92f83ec"
   end
 
-  resource "third_party__libc++__trunk" do
+  resource "third_party/libc++/trunk" do
     url "https://chromium.googlesource.com/chromium/llvm-project/libcxx.git",
       :revision => "85a7702b4cc5d69402791fe685f151cf3076be71"
   end
 
-  resource "v8__build" do
+  resource "v8/build" do
     url "https://chromium.googlesource.com/chromium/src/build.git",
       :revision => "b5df2518f091eea3d358f30757dec3e33db56156"
   end
 
-  resource "v8__tools__swarming_client" do
+  resource "v8/tools/swarming_client" do
     url "https://chromium.googlesource.com/infra/luci/client-py.git",
       :revision => "833f5ebf894be1e3e6d13678d5de8479bf12ff28"
   end
 
-  resource "v8__third_party__googletest__src" do
+  resource "v8/third_party/googletest/src" do
     url "https://chromium.googlesource.com/external/github.com/google/googletest.git",
       :revision => "08d5b1f33af8c18785fb8ca02792b5fac81e248f"
   end
 
-  resource "v8__base__trace_event__common" do
+  resource "v8/base/trace_event/common" do
     url "https://chromium.googlesource.com/chromium/src/base/trace_event/common.git",
       :revision => "211b3ed9d0481b4caddbee1322321b86a483ca1f"
   end
 
-  resource "v8__third_party__instrumented_libraries" do
+  resource "v8/third_party/instrumented_libraries" do
     url "https://chromium.googlesource.com/chromium/src/third_party/instrumented_libraries.git",
       :revision => "323cf32193caecbf074d1a0cb5b02b905f163e0f"
   end
 
-  resource "v8__tools__gyp" do
+  resource "v8/tools/gyp" do
     url "https://chromium.googlesource.com/external/gyp.git",
       :revision => "d61a9397e668fa9843c4aa7da9e79460fe590bfb"
   end
 
-  resource "v8__tools__clang" do
+  resource "v8/tools/clang" do
     url "https://chromium.googlesource.com/chromium/src/tools/clang.git",
       :revision => "c893c7eec4706f8c7fc244ee254b1dadd8f8d158"
   end
 
-  resource "v8__test__mozilla__data" do
+  resource "v8/test/mozilla/data" do
     url "https://chromium.googlesource.com/v8/deps/third_party/mozilla-tests.git",
       :revision => "f6c578a10ea707b1a8ab0b88943fe5115ce2b9be"
   end
 
-  resource "v8__test__test262__harness" do
+  resource "v8/test/test262/harness" do
     url "https://chromium.googlesource.com/external/github.com/test262-utils/test262-harness-py.git",
       :revision => "0f2acdd882c84cff43b9d60df7574a1901e2cdcd"
   end
 
-  resource "v8__buildtools" do
+  resource "v8/buildtools" do
     url "https://chromium.googlesource.com/chromium/buildtools.git",
       :revision => "94288c26d2ffe3aec9848c147839afee597acefd"
   end
 
-  resource "v8__third_party__depot_tools" do
+  resource "v8/third_party/depot_tools" do
     url "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
       :revision => "083eb25f9acbe034db94a1bd5c1659125b6ebf98"
   end
 
-  resource "v8__third_party__markupsafe" do
+  resource "v8/third_party/markupsafe" do
     url "https://chromium.googlesource.com/chromium/src/third_party/markupsafe.git",
       :revision => "8f45f5cfa0009d2a70589bcda0349b8cb2b72783"
   end
 
-  resource "v8__third_party__jinja2" do
+  resource "v8/third_party/jinja2" do
     url "https://chromium.googlesource.com/chromium/src/third_party/jinja2.git",
       :revision => "45571de473282bd1d8b63a8dfcb1fd268d0635d2"
   end
 
-  resource "v8__test__wasm-js" do
+  resource "v8/test/wasm-js" do
     url "https://chromium.googlesource.com/external/github.com/WebAssembly/spec.git",
       :revision => "27d63f22e72395248d314520b3ad5b1e0943fc10"
   end
 
-  resource "v8__test__benchmarks__data" do
+  resource "v8/test/benchmarks/data" do
     url "https://chromium.googlesource.com/v8/deps/third_party/benchmarks.git",
       :revision => "05d7188267b4560491ff9155c5ee13e207ecd65f"
   end
 
-  resource "v8__tools__luci-go" do
+  resource "v8/tools/luci-go" do
     url "https://chromium.googlesource.com/chromium/src/tools/luci-go.git",
       :revision => "ff0709d4283b1f233dcf0c9fec1672c6ecaed2f1"
   end
 
-  resource "clang_format__script" do
+  resource "clang_format/script" do
     url "https://chromium.googlesource.com/chromium/llvm-project/cfe/tools/clang-format.git",
       :revision => "0653eee0c81ea04715c635dd0885e8096ff6ba6d"
   end
 
-  resource "v8__test__test262__data" do
+  resource "v8/test/test262/data" do
     url "https://chromium.googlesource.com/external/github.com/tc39/test262.git",
       :revision => "0192e0d70e2295fb590f14865da42f0f9dfa64bd"
   end
 
-  resource "third_party__libunwind__trunk" do
+  resource "third_party/libunwind/trunk" do
     url "https://chromium.googlesource.com/external/llvm.org/libunwind.git",
       :revision => "1e1c6b739595098ba5c466bfe9d58b993e646b48"
   end
 
-  resource "third_party__libc++abi__trunk" do
+  resource "third_party/libc++abi/trunk" do
     url "https://chromium.googlesource.com/chromium/llvm-project/libcxxabi.git",
       :revision => "05a73941f3fb177c4a891d4ff2a4ed5785e3b80c"
   end
@@ -135,28 +135,28 @@ class V8 < Formula
     (buildpath/"v8").install Dir.glob("*", File::FNM_DOTMATCH) - %w[. .. .brew_home]
 
     # autogenerated installing resources to paths according to DEPS file
-    (buildpath/"v8/third_party/icu").install resource("v8__third_party__icu")
-    (buildpath/"third_party/libc++/trunk").install resource("third_party__libc++__trunk")
-    (buildpath/"v8/build").install resource("v8__build")
-    (buildpath/"v8/tools/swarming_client").install resource("v8__tools__swarming_client")
-    (buildpath/"v8/third_party/googletest/src").install resource("v8__third_party__googletest__src")
-    (buildpath/"v8/base/trace_event/common").install resource("v8__base__trace_event__common")
-    (buildpath/"v8/third_party/instrumented_libraries").install resource("v8__third_party__instrumented_libraries")
-    (buildpath/"v8/tools/gyp").install resource("v8__tools__gyp")
-    (buildpath/"v8/tools/clang").install resource("v8__tools__clang")
-    (buildpath/"v8/test/mozilla/data").install resource("v8__test__mozilla__data")
-    (buildpath/"v8/test/test262/harness").install resource("v8__test__test262__harness")
-    (buildpath/"v8/buildtools").install resource("v8__buildtools")
-    (buildpath/"v8/third_party/depot_tools").install resource("v8__third_party__depot_tools")
-    (buildpath/"v8/third_party/markupsafe").install resource("v8__third_party__markupsafe")
-    (buildpath/"v8/third_party/jinja2").install resource("v8__third_party__jinja2")
-    (buildpath/"v8/test/wasm-js").install resource("v8__test__wasm-js")
-    (buildpath/"v8/test/benchmarks/data").install resource("v8__test__benchmarks__data")
-    (buildpath/"v8/tools/luci-go").install resource("v8__tools__luci-go")
-    (buildpath/"clang_format/script").install resource("clang_format__script")
-    (buildpath/"v8/test/test262/data").install resource("v8__test__test262__data")
-    (buildpath/"third_party/libunwind/trunk").install resource("third_party__libunwind__trunk")
-    (buildpath/"third_party/libc++abi/trunk").install resource("third_party__libc++abi__trunk")
+    (buildpath/"v8/third_party/icu").install resource("v8/third_party/icu")
+    (buildpath/"third_party/libc++/trunk").install resource("third_party/libc++/trunk")
+    (buildpath/"v8/build").install resource("v8/build")
+    (buildpath/"v8/tools/swarming_client").install resource("v8/tools/swarming_client")
+    (buildpath/"v8/third_party/googletest/src").install resource("v8/third_party/googletest/src")
+    (buildpath/"v8/base/trace_event/common").install resource("v8/base/trace_event/common")
+    (buildpath/"v8/third_party/instrumented_libraries").install resource("v8/third_party/instrumented_libraries")
+    (buildpath/"v8/tools/gyp").install resource("v8/tools/gyp")
+    (buildpath/"v8/tools/clang").install resource("v8/tools/clang")
+    (buildpath/"v8/test/mozilla/data").install resource("v8/test/mozilla/data")
+    (buildpath/"v8/test/test262/harness").install resource("v8/test/test262/harness")
+    (buildpath/"v8/buildtools").install resource("v8/buildtools")
+    (buildpath/"v8/third_party/depot_tools").install resource("v8/third_party/depot_tools")
+    (buildpath/"v8/third_party/markupsafe").install resource("v8/third_party/markupsafe")
+    (buildpath/"v8/third_party/jinja2").install resource("v8/third_party/jinja2")
+    (buildpath/"v8/test/wasm-js").install resource("v8/test/wasm-js")
+    (buildpath/"v8/test/benchmarks/data").install resource("v8/test/benchmarks/data")
+    (buildpath/"v8/tools/luci-go").install resource("v8/tools/luci-go")
+    (buildpath/"clang_format/script").install resource("clang_format/script")
+    (buildpath/"v8/test/test262/data").install resource("v8/test/test262/data")
+    (buildpath/"third_party/libunwind/trunk").install resource("third_party/libunwind/trunk")
+    (buildpath/"third_party/libc++abi/trunk").install resource("third_party/libc++abi/trunk")
 
     # add depot_tools to PATH (for download_from_google_storage tool)
     ENV.prepend_path "PATH", buildpath/"v8/third_party/depot_tools"
