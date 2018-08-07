@@ -1,10 +1,8 @@
-# Track Chrome stable.
-# https://omahaproxy.appspot.com/
 class V8 < Formula
   desc "Google's JavaScript engine"
   homepage "https://github.com/v8/v8/wiki"
-  url "https://github.com/v8/v8-git-mirror/archive/5.1.281.47.tar.gz"
-  sha256 "63c9933227d6912689ea6bc012eea6a1fabaf526ac04bc245d9381e3ea238bf6"
+  url "https://github.com/v8/v8/archive/6.8.275.24.tar.gz"
+  sha256 "74b1c62f3790cab55f41f5b221637745dc00f26123c2e25e2d1d37a133555fc1"
 
   bottle do
     cellar :any
@@ -15,98 +13,208 @@ class V8 < Formula
     sha256 "7bcd1bbd66c11305eeea0c36ca472de8a639f511abe0909c8815b1208dbce7b6" => :mavericks
   end
 
-  option "with-readline", "Use readline instead of libedit"
+  # https://bugs.chromium.org/p/chromium/issues/detail?id=620127
+  depends_on :macos => :el_capitan
 
-  # not building on Snow Leopard:
-  # https://github.com/Homebrew/homebrew/issues/21426
-  depends_on :macos => :lion
-
-  # gyp doesn't run under 2.6 or lower
+  # depot_tools/GN require Python 2.7+
   depends_on "python@2" => :build
-
-  depends_on "readline" => :optional
 
   needs :cxx11
 
-  # Update from "DEPS" file in tarball.
-  # Note that we don't require the "test" DEPS because we don't run the tests.
-  resource "gyp" do
-    url "https://chromium.googlesource.com/external/gyp.git",
-        :revision => "4ec6c4e3a94bd04a6da2858163d40b2429b8aad1"
-  end
-
-  resource "icu" do
+  resource "v8__third_party__icu" do
     url "https://chromium.googlesource.com/chromium/deps/icu.git",
-        :revision => "c291cde264469b20ca969ce8832088acb21e0c48"
+      :revision => "f61e46dbee9d539a32551493e3bcc1dea92f83ec"
   end
 
-  resource "buildtools" do
-    url "https://chromium.googlesource.com/chromium/buildtools.git",
-        :revision => "80b5126f91be4eb359248d28696746ef09d5be67"
+  resource "third_party__libc++__trunk" do
+    url "https://chromium.googlesource.com/chromium/llvm-project/libcxx.git",
+      :revision => "85a7702b4cc5d69402791fe685f151cf3076be71"
   end
 
-  resource "common" do
-    url "https://chromium.googlesource.com/chromium/src/base/trace_event/common.git",
-        :revision => "c8c8665c2deaf1cc749d9f8e153256d4f67bf1b8"
+  resource "v8__build" do
+    url "https://chromium.googlesource.com/chromium/src/build.git",
+      :revision => "b5df2518f091eea3d358f30757dec3e33db56156"
   end
 
-  resource "swarming_client" do
-    url "https://chromium.googlesource.com/external/swarming.client.git",
-        :revision => "df6e95e7669883c8fe9ef956c69a544154701a49"
+  resource "v8__tools__swarming_client" do
+    url "https://chromium.googlesource.com/infra/luci/client-py.git",
+      :revision => "833f5ebf894be1e3e6d13678d5de8479bf12ff28"
   end
 
-  resource "gtest" do
+  resource "v8__third_party__googletest__src" do
     url "https://chromium.googlesource.com/external/github.com/google/googletest.git",
-        :revision => "6f8a66431cb592dad629028a50b3dd418a408c87"
+      :revision => "08d5b1f33af8c18785fb8ca02792b5fac81e248f"
   end
 
-  resource "gmock" do
-    url "https://chromium.googlesource.com/external/googlemock.git",
-        :revision => "0421b6f358139f02e102c9c332ce19a33faf75be"
+  resource "v8__base__trace_event__common" do
+    url "https://chromium.googlesource.com/chromium/src/base/trace_event/common.git",
+      :revision => "211b3ed9d0481b4caddbee1322321b86a483ca1f"
   end
 
-  resource "clang" do
+  resource "v8__third_party__instrumented_libraries" do
+    url "https://chromium.googlesource.com/chromium/src/third_party/instrumented_libraries.git",
+      :revision => "323cf32193caecbf074d1a0cb5b02b905f163e0f"
+  end
+
+  resource "v8__tools__gyp" do
+    url "https://chromium.googlesource.com/external/gyp.git",
+      :revision => "d61a9397e668fa9843c4aa7da9e79460fe590bfb"
+  end
+
+  resource "v8__tools__clang" do
     url "https://chromium.googlesource.com/chromium/src/tools/clang.git",
-        :revision => "faee82e064e04e5cbf60cc7327e7a81d2a4557ad"
+      :revision => "c893c7eec4706f8c7fc244ee254b1dadd8f8d158"
+  end
+
+  resource "v8__test__mozilla__data" do
+    url "https://chromium.googlesource.com/v8/deps/third_party/mozilla-tests.git",
+      :revision => "f6c578a10ea707b1a8ab0b88943fe5115ce2b9be"
+  end
+
+  resource "v8__test__test262__harness" do
+    url "https://chromium.googlesource.com/external/github.com/test262-utils/test262-harness-py.git",
+      :revision => "0f2acdd882c84cff43b9d60df7574a1901e2cdcd"
+  end
+
+  resource "v8__buildtools" do
+    url "https://chromium.googlesource.com/chromium/buildtools.git",
+      :revision => "94288c26d2ffe3aec9848c147839afee597acefd"
+  end
+
+  resource "v8__third_party__depot_tools" do
+    url "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+      :revision => "083eb25f9acbe034db94a1bd5c1659125b6ebf98"
+  end
+
+  resource "v8__third_party__markupsafe" do
+    url "https://chromium.googlesource.com/chromium/src/third_party/markupsafe.git",
+      :revision => "8f45f5cfa0009d2a70589bcda0349b8cb2b72783"
+  end
+
+  resource "v8__third_party__jinja2" do
+    url "https://chromium.googlesource.com/chromium/src/third_party/jinja2.git",
+      :revision => "45571de473282bd1d8b63a8dfcb1fd268d0635d2"
+  end
+
+  resource "v8__test__wasm-js" do
+    url "https://chromium.googlesource.com/external/github.com/WebAssembly/spec.git",
+      :revision => "27d63f22e72395248d314520b3ad5b1e0943fc10"
+  end
+
+  resource "v8__test__benchmarks__data" do
+    url "https://chromium.googlesource.com/v8/deps/third_party/benchmarks.git",
+      :revision => "05d7188267b4560491ff9155c5ee13e207ecd65f"
+  end
+
+  resource "v8__tools__luci-go" do
+    url "https://chromium.googlesource.com/chromium/src/tools/luci-go.git",
+      :revision => "ff0709d4283b1f233dcf0c9fec1672c6ecaed2f1"
+  end
+
+  resource "clang_format__script" do
+    url "https://chromium.googlesource.com/chromium/llvm-project/cfe/tools/clang-format.git",
+      :revision => "0653eee0c81ea04715c635dd0885e8096ff6ba6d"
+  end
+
+  resource "v8__test__test262__data" do
+    url "https://chromium.googlesource.com/external/github.com/tc39/test262.git",
+      :revision => "0192e0d70e2295fb590f14865da42f0f9dfa64bd"
+  end
+
+  resource "third_party__libunwind__trunk" do
+    url "https://chromium.googlesource.com/external/llvm.org/libunwind.git",
+      :revision => "1e1c6b739595098ba5c466bfe9d58b993e646b48"
+  end
+
+  resource "third_party__libc++abi__trunk" do
+    url "https://chromium.googlesource.com/chromium/llvm-project/libcxxabi.git",
+      :revision => "05a73941f3fb177c4a891d4ff2a4ed5785e3b80c"
   end
 
   def install
-    # Bully GYP into correctly linking with c++11
-    ENV.cxx11
-    ENV["GYP_DEFINES"] = "clang=1 mac_deployment_target=#{MacOS.version}"
-    # https://code.google.com/p/v8/issues/detail?id=4511#c3
-    ENV.append "GYP_DEFINES", "v8_use_external_startup_data=0"
+    (buildpath/"v8").install Dir.glob("*", File::FNM_DOTMATCH) - %w[. .. .brew_home]
 
-    # fix up libv8.dylib install_name
-    # https://github.com/Homebrew/homebrew/issues/36571
-    # https://code.google.com/p/v8/issues/detail?id=3871
-    inreplace "tools/gyp/v8.gyp",
-              "'OTHER_LDFLAGS': ['-dynamiclib', '-all_load']",
-              "\\0, 'DYLIB_INSTALL_NAME_BASE': '#{opt_lib}'"
+    # autogenerated installing resources to paths according to DEPS file
+    (buildpath/"v8/third_party/icu").install resource("v8__third_party__icu")
+    (buildpath/"third_party/libc++/trunk").install resource("third_party__libc++__trunk")
+    (buildpath/"v8/build").install resource("v8__build")
+    (buildpath/"v8/tools/swarming_client").install resource("v8__tools__swarming_client")
+    (buildpath/"v8/third_party/googletest/src").install resource("v8__third_party__googletest__src")
+    (buildpath/"v8/base/trace_event/common").install resource("v8__base__trace_event__common")
+    (buildpath/"v8/third_party/instrumented_libraries").install resource("v8__third_party__instrumented_libraries")
+    (buildpath/"v8/tools/gyp").install resource("v8__tools__gyp")
+    (buildpath/"v8/tools/clang").install resource("v8__tools__clang")
+    (buildpath/"v8/test/mozilla/data").install resource("v8__test__mozilla__data")
+    (buildpath/"v8/test/test262/harness").install resource("v8__test__test262__harness")
+    (buildpath/"v8/buildtools").install resource("v8__buildtools")
+    (buildpath/"v8/third_party/depot_tools").install resource("v8__third_party__depot_tools")
+    (buildpath/"v8/third_party/markupsafe").install resource("v8__third_party__markupsafe")
+    (buildpath/"v8/third_party/jinja2").install resource("v8__third_party__jinja2")
+    (buildpath/"v8/test/wasm-js").install resource("v8__test__wasm-js")
+    (buildpath/"v8/test/benchmarks/data").install resource("v8__test__benchmarks__data")
+    (buildpath/"v8/tools/luci-go").install resource("v8__tools__luci-go")
+    (buildpath/"clang_format/script").install resource("clang_format__script")
+    (buildpath/"v8/test/test262/data").install resource("v8__test__test262__data")
+    (buildpath/"third_party/libunwind/trunk").install resource("third_party__libunwind__trunk")
+    (buildpath/"third_party/libc++abi/trunk").install resource("third_party__libc++abi__trunk")
 
-    (buildpath/"build/gyp").install resource("gyp")
-    (buildpath/"third_party/icu").install resource("icu")
-    (buildpath/"buildtools").install resource("buildtools")
-    (buildpath/"base/trace_event/common").install resource("common")
-    (buildpath/"tools/swarming_client").install resource("swarming_client")
-    (buildpath/"testing/gtest").install resource("gtest")
-    (buildpath/"testing/gmock").install resource("gmock")
-    (buildpath/"tools/clang").install resource("clang")
+    # add depot_tools to PATH (for download_from_google_storage tool)
+    ENV.prepend_path "PATH", buildpath/"v8/third_party/depot_tools"
 
-    system "make", "native", "library=shared", "snapshot=on",
-                   "console=readline", "i18nsupport=off",
-                   "strictaliasing=off"
+    # autogenerated system calls for hooks in DEPS file
+    system "python", "v8/third_party/depot_tools/update_depot_tools_toggle.py", "--disable"
+    system "python", "v8/build/landmines.py", "--landmine-scripts", "v8/tools/get_landmines.py"
+    system "download_from_google_storage", "--no_resume", "--platform=darwin", "--no_auth", "--bucket", "chromium-clang-format", "-s", "v8/buildtools/mac/clang-format.sha1"
+    system "download_from_google_storage", "--no_resume", "--platform=darwin", "--no_auth", "--bucket", "chromium-luci", "-d", "v8/tools/luci-go/mac64"
+    system "download_from_google_storage", "--no_resume", "--platform=darwin", "--no_auth", "--bucket", "chromium-gn", "-s", "v8/buildtools/mac/gn.sha1"
+    system "download_from_google_storage", "--no_resume", "--no_auth", "-u", "--bucket", "v8-wasm-spec-tests", "-s", "v8/test/wasm-spec-tests/tests.tar.gz.sha1"
+    system "download_from_google_storage", "--no_resume", "--no_auth", "-u", "--bucket", "chromium-v8-closure-compiler", "-s", "v8/src/inspector/build/closure-compiler.tar.gz.sha1"
+    system "python", "v8/tools/clang/scripts/update.py"
 
-    include.install Dir["include/*"]
+    cd "v8" do
+      output_path = "out.gn/x64.release"
 
-    cd "out/native" do
-      rm ["libgmock.a", "libgtest.a"]
-      lib.install Dir["lib*"]
-      bin.install "d8", "mksnapshot", "process", "shell" => "v8"
+      gn_args = {
+        :is_debug => false,
+        :is_component_build => true,
+        :v8_use_external_startup_data => false,
+        :v8_enable_i18n_support => true,
+      }
+
+      # Transform to args string
+      gn_args_string = gn_args.map { |k, v| "#{k}=#{v}" }.join(" ")
+
+      # Build with gn + ninja
+      system "gn",
+        "gen",
+        "--args=#{gn_args_string}",
+        output_path
+
+      system "ninja",
+        "-j", ENV.make_jobs,
+        "-C", output_path,
+        "-v",
+        "d8"
+
+      # Install all the things
+      include.install Dir["include/*"]
+
+      cd output_path do
+        lib.install Dir["lib*.dylib"]
+
+        # Install d8 and icudtl.dat in libexec and symlink
+        # because they need to be in the same directory.
+        libexec.install Dir["d8", "icudt*.dat"]
+        (bin/"d8").write <<~EOS
+          #!/bin/bash
+          exec "#{libexec}/d8" --icu-data-file="#{libexec}/icudtl.dat" "$@"
+        EOS
+      end
     end
   end
 
   test do
-    assert_equal "Hello World!", pipe_output("#{bin}/v8 -e 'print(\"Hello World!\")'").chomp
+    assert_equal "Hello World!", shell_output("#{bin}/d8 -e 'print(\"Hello World!\");'").chomp
+    assert_match %r{12/\d{2}/2012}, shell_output("#{bin}/d8 -e 'print(new Intl.DateTimeFormat(\"en-US\").format(new Date(Date.UTC(2012, 11, 20, 3, 0, 0))));'").chomp
   end
 end
