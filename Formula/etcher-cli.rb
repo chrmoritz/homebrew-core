@@ -8,7 +8,7 @@ class EtcherCli < Formula
   sha256 "02082bc1caac746e1cdcd95c2892c9b41ff8d45a672b52f8467548cad4850f5d"
 
   depends_on "python" => :build
-  depends_on "node@6"
+  depends_on "node"
 
   def install
     # Patch package.json the generate cli build instead of electron build
@@ -19,13 +19,12 @@ class EtcherCli < Formula
                %w[rendition prop-types node-ipc inactivity-timer flexboxgrid styled resin-corvus]
       pkg_json["dependencies"].delete(dep) if dep.start_with?(*ignore)
     end
+    pkg_json["dependencies"]["lzma-native"] = "^4.0.1" # upgrading lzma-native for Node 10 support
+    pkg_json["dependencies"]["usb"] = "github:tessel/node-usb#1.3.2" # upgrading node-usb for Node 10 support
     pkg_json.delete("devDependencies")
     pkg_json["files"] = %w[bin build lib/cli lib/sdk lib/shared binding.gyp] # ignore electron related source files
     IO.write("package.json", JSON.pretty_generate(pkg_json))
     rm "npm-shrinkwrap.json" # remove shrinkwrap because it would override our patched package.json
-
-    # always run againts our node@6
-    inreplace buildpath/"bin/etcher", "#!/usr/bin/env node", "#!#{Formula["node@6"].opt_bin}/node"
 
     system "npm", "install", *Language::Node.std_npm_install_args(libexec)
 
