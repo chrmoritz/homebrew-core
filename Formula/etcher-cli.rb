@@ -1,5 +1,4 @@
 require "language/node"
-require "json"
 
 class EtcherCli < Formula
   desc "Flash OS images to SD cards & USB drives, safely and easily"
@@ -7,28 +6,20 @@ class EtcherCli < Formula
   url "https://github.com/resin-io/etcher/archive/v1.4.4.tar.gz"
   sha256 "02082bc1caac746e1cdcd95c2892c9b41ff8d45a672b52f8467548cad4850f5d"
 
+  depends_on "node@6" => :build # must be abi compatiable to the node version used with pkg
   depends_on "python" => :build
-  depends_on "node"
 
   def install
-    # Patch package.json the generate cli build instead of electron build
-    pkg_json = JSON.parse(IO.read("package.json"))
-    pkg_json["bin"] = { :etcher => "./bin/etcher" } # bin entry point
-    pkg_json["dependencies"].each do |dep, _| # ignore some electron releated dependencies
-      ignore = %w[@fortawesome @types angular react electron bootstrap roboto-fontface winusb] +
-               %w[rendition prop-types node-ipc inactivity-timer flexboxgrid styled resin-corvus]
-      pkg_json["dependencies"].delete(dep) if dep.start_with?(*ignore)
-    end
-    pkg_json["dependencies"]["lzma-native"] = "^4.0.1" # upgrading lzma-native for Node 10 support
-    pkg_json["dependencies"]["usb"] = "github:tessel/node-usb#1.3.2" # upgrading node-usb for Node 10 support
-    pkg_json.delete("devDependencies")
-    pkg_json["files"] = %w[bin build lib/cli lib/sdk lib/shared binding.gyp] # ignore electron related source files
-    IO.write("package.json", JSON.pretty_generate(pkg_json))
-    rm "npm-shrinkwrap.json" # remove shrinkwrap because it would override our patched package.json
+    rm "npm-shrinkwrap.json"
+    system "npm", "install", "--production", *Language::Node.local_npm_install_args
+    system "npm", "install", *Language::Node.local_npm_install_args, "pkg@4.3.0", "--prefix=#{buildpath}/pkg"
 
-    system "npm", "install", *Language::Node.std_npm_install_args(libexec)
+    system buildpath/"pkg/node_modules/.bin/pkg", "--output", libexec/"etcher", "--build",
+           "-t", "node6-macos-x64", "--debug", "lib/cli/etcher.js"
+    system buildpath/"scripts/build/dependencies-npm-extract-addons.sh",
+           "-d", buildpath/"node_modules", "-o", libexec/"node_modules"
 
-    bin.install_symlink libexec/"bin/etcher"
+    bin.install_symlink libexec/"etcher"
   end
 
   test do
