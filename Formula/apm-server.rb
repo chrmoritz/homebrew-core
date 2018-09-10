@@ -1,10 +1,8 @@
 class ApmServer < Formula
   desc "Server for shipping APM metrics to Elasticsearch"
   homepage "https://www.elastic.co/"
-  # Pinned at 6.2.x because of a licencing issue
-  # See: https://github.com/Homebrew/homebrew-core/pull/28995
-  url "https://github.com/elastic/apm-server/archive/v6.2.4.tar.gz"
-  sha256 "b0d85f62851dd0cc7cb7a54c8549d36fb7c29bdb8f83c91b3a6487a8e9acba39"
+  url "https://github.com/elastic/apm-server/archive/v6.4.0.tar.gz"
+  sha256 "6cb47e1458d4644a458d0b9edbd569098791678d72bfeec83b4fb176b211cb76"
   head "https://github.com/elastic/apm-server.git"
 
   bottle do
@@ -16,14 +14,18 @@ class ApmServer < Formula
   end
 
   depends_on "go" => :build
+  depends_on "mage" => :build
   depends_on "python@2" => :build
 
   resource "virtualenv" do
-    url "https://files.pythonhosted.org/packages/b1/72/2d70c5a1de409ceb3a27ff2ec007ecdd5cc52239e7c74990e32af57affe9/virtualenv-15.2.0.tar.gz"
-    sha256 "1d7e241b431e7afce47e77f8843a276f652699d1fa4f93b9d8ce0076fd7b0b54"
+    url "https://files.pythonhosted.org/packages/33/bc/fa0b5347139cd9564f0d44ebd2b147ac97c36b2403943dbee8a25fd74012/virtualenv-16.0.0.tar.gz"
+    sha256 "ca07b4c0b54e14a91af9f34d0919790b016923d157afda5efdde55c96718f752"
   end
 
   def install
+    # remove non open source files
+    rm_rf "x-pack"
+
     ENV["GOPATH"] = buildpath
     (buildpath/"src/github.com/elastic/apm-server").install buildpath.children
 
