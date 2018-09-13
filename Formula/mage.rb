@@ -9,13 +9,7 @@ class Mage < Formula
 
   def install
     ENV["GOPATH"] = prefix
-    (buildpath/"src/github.com/magefile/mage").install buildpath.children
-
-    cd "src/github.com/magefile/mage" do
-      # bootstraps itself without the need of another mage version installed
-      system "go", "run", "bootstrap.go"
-      prefix.install_metafiles
-    end
+    system "go", "run", "bootstrap.go"
   end
 
   test do
