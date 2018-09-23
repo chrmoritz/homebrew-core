@@ -8,15 +8,17 @@ class EtcherCli < Formula
   sha256 "02082bc1caac746e1cdcd95c2892c9b41ff8d45a672b52f8467548cad4850f5d"
 
   depends_on "python" => :build
-  depends_on "node@8"
+  depends_on "node"
 
   def install
-    # use npm from node@8 here, because we don't depend on node (can't use language/node)
-    ENV.prepend_path "PATH", Formula["node@8"].bin
-    system "npm", "install", "--production", "-ddd", "--build-from-source",
-           "--#{Language::Node.npm_cache_config}"
-    system "npm", "install", "pkg@4.3.0", "-ddd", "--build-from-source",
-           "--#{Language::Node.npm_cache_config}", "--prefix=#{buildpath}/pkg"
+    pkg_json = JSON.parse(IO.read("package.json"))
+    pkg_json["dependencies"]["lzma-native"] = "^4.0.1" # upgrading lzma-native for Node 10 support
+    pkg_json["dependencies"].delete("usb") # delete node-usb (no node 10 support and not needed for cli)
+    IO.write("package.json", JSON.pretty_generate(pkg_json))
+    rm "npm-shrinkwrap.json"
+
+    system "npm", "install", "--production", *Language::Node.local_npm_install_args
+    system "npm", "install", "pkg@4.3.0", "--prefix=#{buildpath}/pkg", *Language::Node.local_npm_install_args
 
     cd "pkg" do
       # get list of for the CLI required dependencies using pkg's AST tree walker
@@ -31,7 +33,7 @@ class EtcherCli < Formula
           let required_deps = required_paths.map(path => /\\/node_modules\\/([^\\/]*)\\//.exec(path));
           // filter out non matches (direct source files) and only use the actual parenthesized match
           required_deps = required_deps.filter(r => r !== null).map(r => r[1]);
-          // dedupte results using a Set (we currently have one match for every source file)
+          // dedupte results using a Set (we currently have one match for every source file used)
           let unique_deps = new Set(required_deps);
           // log unique deps to console seperatey by a new line
           console.log(Array.from(unique_deps).join("\\n"));
@@ -42,7 +44,7 @@ class EtcherCli < Formula
       # Patch package.json the generate cli build instead of electron build
       pkg_json = JSON.parse(IO.read("../package.json"))
       pkg_json["bin"] = { :etcher => "./bin/etcher" } # set bin entry point
-      pkg_json["dependencies"].each do |dep, _| # ignore some electron releated dependencies
+      pkg_json["dependencies"].each do |dep, _| # ignore all electron releated dependencies
         pkg_json["dependencies"].delete(dep) unless cli_deps.include? dep
       end
       # bundle the already installed depedencies and ignore electron related source files
@@ -51,15 +53,7 @@ class EtcherCli < Formula
       IO.write("../package.json", JSON.pretty_generate(pkg_json))
     end
 
-    # remove shrinkwrap because it would override our patched package.json
-    rm "npm-shrinkwrap.json"
-    # patch shebang to always run againts our node@8
-    inreplace "bin/etcher", "#!/usr/bin/env node", "#!#{Formula["node@8"].opt_bin}/node"
-
-    # can't use language/node here, because we have to run with our node@8 here
-    pack = Utils.popen_read("npm pack --ignore-scripts").lines.last.chomp
-    system "npm", "install", "-ddd", "--global", "--production", "--build-from-source",
-           "--#{Language::Node.npm_cache_config}", "--prefix=#{libexec}", buildpath/pack
+    system "npm", "install", "--production", *Language::Node.std_npm_install_args(libexec)
 
     bin.install_symlink libexec/"bin/etcher"
   end
