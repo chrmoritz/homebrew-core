@@ -21,10 +21,20 @@ class EtcherCli < Formula
     cd "pkg" do
       # get list of for the CLI required dependencies using pkg's AST tree walker
       (buildpath/"pkg/get-cli-deps.js").write <<~EOS
-        const w = require("pkg/lib-es5/walker.js").default, p = "../lib/cli/etcher.js";
-        w({config: {}, base: "../lib/cli", configPath: p}, p).then(r => {
-          let d = Object.keys(r.records).map(s => /\\/node_modules\\/([^\\/]*)\\//.exec(s));
-          console.log(Array.from(new Set(d.filter(s => s).map(s => s[1]))).join("\\n"));
+        const walker = require("pkg/lib-es5/walker.js").default;
+        const cli_entrypoint = "../lib/cli/etcher.js";
+        // get the list of file paths required by the cli entrypoint by running the ast walker on it
+        var walk_ast = walker({config: {}, base: "../lib/cli", configPath: cli_entrypoint}, cli_entrypoint);
+        walk_ast.then(ast_walker_results => {
+          let required_paths = Object.keys(ast_walker_results.records);
+          // run regex on the required paths to find out the top level dependencies they belong to
+          let required_deps = required_paths.map(path => /\\/node_modules\\/([^\\/]*)\\//.exec(path));
+          // filter out non matches (direct source files) and only use the actual parenthesized match
+          required_deps = required_deps.filter(r => r !== null).map(r => r[1]);
+          // dedupte results using a Set (we currently have one match for every source file)
+          let unique_deps = new Set(required_deps);
+          // log unique deps to console seperatey by a new line
+          console.log(Array.from(unique_deps).join("\\n"));
         });
       EOS
       cli_deps = Utils.popen_read("node get-cli-deps.js").chomp.split("\n")
