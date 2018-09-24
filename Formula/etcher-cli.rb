@@ -17,7 +17,7 @@ class EtcherCli < Formula
     IO.write("package.json", JSON.pretty_generate(pkg_json))
     rm "npm-shrinkwrap.json"
 
-    system "npm", "install", "--production", *Language::Node.local_npm_install_args
+    system "npm", "install", "--production", "--ignore-scripts", *Language::Node.local_npm_install_args
     system "npm", "install", "pkg@4.3.0", "--prefix=#{buildpath}/pkg", *Language::Node.local_npm_install_args
 
     cd "pkg" do
@@ -53,20 +53,23 @@ class EtcherCli < Formula
       IO.write("../package.json", JSON.pretty_generate(pkg_json))
     end
 
+    # patch out unconditional sudo requirement
+    inreplace "lib/cli/etcher.js", "permissions.isElevated().then", "Promise.resolve(true).then"
+
     system "npm", "install", "--production", *Language::Node.std_npm_install_args(libexec)
 
     bin.install_symlink libexec/"bin/etcher"
   end
 
   test do
-    # Writing a functionality test would require sudo and access to hdiutil,
-    # which is both not possible inside brews sandbox. Manual test with:
+    # Writing a functionality test would require write permissions to /dev/disk*,
+    # which is not possible within brews sandbox. Manual test with::
     # $ curl -o /tmp/mini.iso http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-i386/current/images/netboot/mini.iso
     # $ hdiutil create -size 100m -fs HFS+ -volname Test /tmp/test.dmg
     # $ hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount /tmp/test.dmg
-    # $ sudo etcher -d <devname> -cu /tmp/mini.iso
-    # $ hdiutil detach <devname> && rm /tmp/{mini.iso,test.dmg}
-    # (replace <devname> with first path printed by hdiutil attach)
+    # $ etcher -d /dev/<disk> -cu /tmp/mini.iso
+    # $ hdiutil detach /dev/<disk> && rm /tmp/{mini.iso,test.dmg}
+    # (replace <disk> with the assigned disk name from hdiutil attach)
     assert_equal pipe_output("#{bin}/etcher --version").chomp, version
   end
 end
