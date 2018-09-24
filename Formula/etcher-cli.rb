@@ -10,6 +10,11 @@ class EtcherCli < Formula
   depends_on "python" => :build
   depends_on "node"
 
+  resource "mini.iso" do
+    url "http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-i386/current/images/netboot/mini.iso"
+    sha256 "fd0d98e5e2c0765c4f597f36f46abd2579e3887388728427ac63b8aa1c4a3f38"
+  end
+
   def install
     pkg_json = JSON.parse(IO.read("package.json"))
     pkg_json["dependencies"]["lzma-native"] = "^4.0.1" # upgrading lzma-native for Node 10 support
@@ -62,14 +67,20 @@ class EtcherCli < Formula
   end
 
   test do
-    # Writing a functionality test would require write permissions to /dev/disk*,
-    # which is not possible within brews sandbox. Manual test with::
-    # $ curl -o /tmp/mini.iso http://archive.ubuntu.com/ubuntu/dists/xenial/main/installer-i386/current/images/netboot/mini.iso
-    # $ hdiutil create -size 100m -fs HFS+ -volname Test /tmp/test.dmg
-    # $ hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount /tmp/test.dmg
-    # $ etcher -d /dev/<disk> -cu /tmp/mini.iso
-    # $ hdiutil detach /dev/<disk> && rm /tmp/{mini.iso,test.dmg}
-    # (replace <disk> with the assigned disk name from hdiutil attach)
     assert_equal pipe_output("#{bin}/etcher --version").chomp, version
+
+    resource("mini.iso").stage testpath
+    system "dd", "if=/dev/zero", "of=test.dmg", "bs=1024", "count=50000"
+    drive = Utils.popen_read("hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount test.dmg").strip
+    if $CHILD_STATUS.exitstatus.zero? && %r{\/dev\/disk\d+} =~ drive
+      begin
+        # This will still fail within brews sandbox because of missing write permissions :(
+        system bin/"etcher", "--drive=#{drive}", "--yes", "--check", testpath/"mini.iso"
+      ensure
+        system "hdiutil", "detach", drive
+      end
+    else
+      assert false, "failed to attach test image"
+    end
   end
 end
