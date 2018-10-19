@@ -28,7 +28,6 @@ class Nghttp2 < Formula
     depends_on "libtool" => :build
   end
 
-  option "with-examples", "Compile and install example programs"
   option "with-python", "Build python3 bindings"
 
   deprecated_option "with-python3" => "with-python"
@@ -39,16 +38,16 @@ class Nghttp2 < Formula
   depends_on "boost"
   depends_on "c-ares"
   depends_on "jansson"
+  depends_on "jemalloc"
   depends_on "libev"
   depends_on "libevent"
   depends_on "libxml2" if MacOS.version <= :lion
   depends_on "openssl"
-  depends_on "jemalloc" => :recommended
   depends_on "python" => :optional
 
   resource "Cython" do
-    url "https://files.pythonhosted.org/packages/79/9d/dea8c5181cdb77d32e20a44dd5346b0e4bac23c4858f2f66ad64bbcf4de8/Cython-0.28.2.tar.gz"
-    sha256 "634e2f10fc8d026c633cffacb45cd8f4582149fa68e1428124e762dbc566e68a"
+    url "https://files.pythonhosted.org/packages/f0/66/6309291b19b498b672817bd237caec787d1b18013ee659f17b1ec5844887/Cython-0.29.tar.gz"
+    sha256 "94916d1ede67682638d3cc0feb10648ff14dc51fb7a7f147f4fedce78eaaea97"
   end
 
   # https://github.com/tatsuhiro-t/nghttp2/issues/125
@@ -68,25 +67,15 @@ class Nghttp2 < Formula
       --disable-python-bindings
     ]
 
-    args << "--enable-examples" if build.with? "examples"
     # requires thread-local storage features only available in 10.11+
     args << "--disable-threads" if MacOS.version < :el_capitan
     args << "--with-xml-prefix=/usr" if MacOS.version > :lion
-    args << "--without-jemalloc" if build.without? "jemalloc"
 
     system "autoreconf", "-ivf" if build.head?
     system "./configure", *args
     system "make"
     system "make", "check"
-
-    # Currently this is not installed by the make install stage.
-    if build.with? "docs"
-      system "make", "html"
-      doc.install Dir["doc/manual/html/*"]
-    end
-
     system "make", "install"
-    libexec.install "examples" if build.with? "examples"
 
     if build.with? "python"
       pyver = Language::Python.major_minor_version "python3"
