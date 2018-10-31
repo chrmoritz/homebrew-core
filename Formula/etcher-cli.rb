@@ -4,8 +4,8 @@ require "json"
 class EtcherCli < Formula
   desc "Flash OS images to SD cards & USB drives, safely and easily"
   homepage "https://etcher.io/"
-  url "https://github.com/resin-io/etcher/archive/v1.4.5.tar.gz"
-  sha256 "82122253333b3bf5dc6f8909a5877a3218a2e677aff09159e5a4819be9e0edb9"
+  url "https://github.com/balena-io/etcher/archive/v1.4.6.tar.gz"
+  sha256 "746063814a8293a547e1195be5987601772c29a7b49623d2e8d0bac50509f60c"
 
   depends_on "python" => :build
   depends_on "node"
@@ -17,8 +17,8 @@ class EtcherCli < Formula
 
   def install
     pkg_json = JSON.parse(IO.read("package.json"))
-    pkg_json["dependencies"]["lzma-native"] = "^4.0.1" # upgrading lzma-native for Node 10 support
-    pkg_json["dependencies"].delete("usb") # delete node-usb (no node 10 support and not needed for cli)
+    pkg_json["dependencies"]["lzma-native"] = "^4.0.1" # upgrading lzma-native for Node 11 support
+    pkg_json["dependencies"].delete("usb") # delete node-usb (no node 11 support and not needed for cli)
     IO.write("package.json", JSON.pretty_generate(pkg_json))
     rm "npm-shrinkwrap.json"
 
