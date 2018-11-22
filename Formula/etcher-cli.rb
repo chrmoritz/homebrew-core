@@ -4,8 +4,8 @@ require "json"
 class EtcherCli < Formula
   desc "Flash OS images to SD cards & USB drives, safely and easily"
   homepage "https://etcher.io/"
-  url "https://github.com/balena-io/etcher/archive/v1.4.6.tar.gz"
-  sha256 "746063814a8293a547e1195be5987601772c29a7b49623d2e8d0bac50509f60c"
+  url "https://github.com/balena-io/etcher/archive/v1.4.7.tar.gz"
+  sha256 "368bada1f23ba5877d1f6ba6fa1d46e0d39f2289a8eb7d2c5cd7de37d80dda8a"
 
   depends_on "python" => :build
   depends_on "node"
