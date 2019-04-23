@@ -13,7 +13,8 @@ class V8 < Formula
   end
 
   depends_on "ninja" => :build
-  depends_on "python@2" => :build # depot_tools/GN require Python 2.7+
+  depends_on "python@2" => :build # GN require Python 2.7+
+  depends_on "llvm" if MacOS.version < :mojave
 
   # https://bugs.chromium.org/p/chromium/issues/detail?id=620127
   depends_on :macos => :el_capitan
@@ -23,11 +24,6 @@ class V8 < Formula
   resource "v8/build" do
     url "https://chromium.googlesource.com/chromium/src/build.git",
       :revision => "80892bfe019dc854c6acdbfbb7304cca63986d4f"
-  end
-
-  resource "v8/tools/clang" do
-    url "https://chromium.googlesource.com/chromium/src/tools/clang.git",
-      :revision => "257c91cc44b07bd06ff03dde809ccbc46a22bec6"
   end
 
   resource "v8/third_party/jinja2" do
@@ -68,12 +64,6 @@ class V8 < Formula
     (buildpath/"base/trace_event/common").install resource("v8/base/trace_event/common")
     (buildpath/"third_party/icu").install resource("v8/third_party/icu")
 
-    # use Google's updated clang on High Sierra and below
-    if MacOS.version < :mojave
-      (buildpath/"tools/clang").install resource("v8/tools/clang")
-      system "python", "tools/clang/scripts/update.py"
-    end
-
     # Build gn from source and add it to the PATH
     (buildpath/"gn").install resource("gn")
     cd "gn" do
@@ -87,13 +77,13 @@ class V8 < Formula
       :is_debug                     => false,
       :is_component_build           => true,
       :v8_use_external_startup_data => false,
-      :v8_enable_i18n_support       => true,  # enables i18n support with icu
-      :use_custom_libcxx            => false, # uses system libc++ instead of Google's custom one
+      :v8_enable_i18n_support       => true,        # enables i18n support with icu
+      :clang_base_path              => "\"/usr/\"", # uses Apples system clang instead of Google's costum one
+      :clang_use_chrome_plugins     => false,       # disable the usage of Google's custom clang plugins
+      :use_custom_libcxx            => false,       # uses system libc++ instead of Google's custom one
     }
-    if MacOS.version == :mojave
-      gn_args[:clang_base_path] = "\"/usr/\"" # uses Apples system clang instead of Google's costum one
-      gn_args[:clang_use_chrome_plugins] = false # disable the usage of Google's custom clang plugins
-    end
+    # use clang from homebrew llvm formula on <= High Sierra, because the system clang is to old for V8
+    gn_args[:clang_base_path] = "\"#{Formula["llvm"].prefix}\"" if MacOS.version < :mojave
 
     # Transform to args string
     gn_args_string = gn_args.map { |k, v| "#{k}=#{v}" }.join(" ")
