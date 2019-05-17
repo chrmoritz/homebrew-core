@@ -2,8 +2,8 @@ class Kibana < Formula
   desc "Analytics and search dashboard for Elasticsearch"
   homepage "https://www.elastic.co/products/kibana"
   url "https://github.com/elastic/kibana.git",
-      :tag      => "v6.7.2",
-      :revision => "c8ecbda57ae7c780ef7d870f2e4d163b5f093e3b"
+      :tag      => "v7.0.1",
+      :revision => "0ea668bae8e1048fd8149ad985f07f5147e60032"
   head "https://github.com/elastic/kibana.git"
 
   bottle do
@@ -48,7 +48,7 @@ class Kibana < Formula
     ENV.prepend_path "PATH", buildpath/"yarn/bin"
     ENV.prepend_path "PATH", prefix/"libexec/node/bin"
     system "yarn", "kbn", "bootstrap"
-    system "yarn", "build", "--oss", "--release", "--skip-os-packages", "--skip-archives"
+    system "node", "scripts/build", "--oss", "--release", "--skip-os-packages", "--skip-archives"
 
     prefix.install Dir
       .glob("build/oss/kibana-#{version}-darwin-x86_64/**")
