@@ -1,8 +1,9 @@
 class Elasticsearch < Formula
   desc "Distributed search & analytics engine"
   homepage "https://www.elastic.co/products/elasticsearch"
-  url "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-6.7.2.tar.gz"
-  sha256 "c6b2cff132cc98771fc16b4beec290fc719ddbc67c01d924ebbeb422a603ca11"
+  url "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-7.0.1-no-jdk-darwin-x86_64.tar.gz"
+  version "7.0.1"
+  sha256 "a04fc32da19390114135be551c87d8fee37175f2d7a8a58d6732ab1b625793f6"
 
   head do
     url "https://github.com/elasticsearch/elasticsearch.git"
@@ -26,10 +27,6 @@ class Elasticsearch < Formula
       cd "tar"
       system "tar", "--strip-components=1", "-xf", Dir["../distribution/tar/build/distributions/elasticsearch-*.tar.gz"].first
     end
-
-    # Remove Windows files
-    rm_f Dir["bin/*.bat"]
-    rm_f Dir["bin/*.exe"]
 
     # Install everything else into package directory
     libexec.install "bin", "config", "lib", "modules"
@@ -55,7 +52,7 @@ class Elasticsearch < Formula
     bin.install libexec/"bin/elasticsearch",
                 libexec/"bin/elasticsearch-keystore",
                 libexec/"bin/elasticsearch-plugin",
-                libexec/"bin/elasticsearch-translog"
+                libexec/"bin/elasticsearch-shard"
     bin.env_script_all_files(libexec/"bin", Language::Java.java_home_env("1.8"))
   end
 
