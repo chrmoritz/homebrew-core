@@ -2,8 +2,8 @@ class Metricbeat < Formula
   desc "Collect metrics from your systems and services"
   homepage "https://www.elastic.co/products/beats/metricbeat"
   url "https://github.com/elastic/beats.git",
-      :tag      => "v6.7.0",
-      :revision => "14ca49c28a6e10b84b4ea8cdebdc46bd2eab3130"
+      :tag      => "v7.0.1",
+      :revision => "cbffb4dcc8d1d2b0ef2078cb7d7546092ee86e57"
   head "https://github.com/elastic/beats.git"
 
   bottle do
