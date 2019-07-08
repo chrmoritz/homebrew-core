@@ -2,8 +2,9 @@ class Deno < Formula
   desc "Command-line JavaScript / TypeScript engine"
   homepage "https://deno.land/"
   url "https://github.com/denoland/deno.git",
-    :tag      => "v0.16.0",
-    :revision => "0809b06a3938868f364f1343b0de4d5d9686495d"
+    :branch   => "cargo_gn2",
+    :revision => "1b7b5b26108d409f3bacbbe3cd308ffd6ea1219e"
+  version "0.15.42"
 
   bottle do
     cellar :any_skip_relocation
@@ -34,19 +35,18 @@ class Deno < Formula
     end
 
     # env args for building a release build with our clang, ninja and gn
-    ENV["DENO_BUILD_MODE"] = "release"
+    ENV["DENO_NO_BINARY_DOWNLOAD"] = "1"
     ENV["DENO_BUILD_ARGS"] = %W[
       clang_base_path="#{Formula["llvm"].prefix}"
       clang_use_chrome_plugins=false
       mac_deployment_target="#{MacOS.version}"
     ].join(" ")
-    ENV["DENO_NINJA_PATH"] = Formula["ninja"].bin/"ninja"
-    ENV["DENO_GN_PATH"] = buildpath/"gn/out/gn"
+    ENV["NINJA"] = Formula["ninja"].bin/"ninja"
+    ENV["GN"] = buildpath/"gn/out/gn"
 
-    system "python", "tools/setup.py", "--no-binary-download"
-    system "python", "tools/build.py", "--release"
-
-    bin.install "target/release/deno"
+    cd "cli" do
+      system "cargo", "install", "-v", "--root", prefix, "--path", "."
+    end
 
     # Install bash and zsh completion
     output = Utils.popen_read("#{bin}/deno completions bash")
