@@ -33,7 +33,10 @@ class NowCli < Formula
 
   test do
     system "#{bin}/now", "init", "bash"
+    assert File.exist?("bash/index.sh")
+    assert File.exist?("bash/now.json")
+    assert File.exist?("bash/README.md")
+    system "echo", "handler >> bash/index.sh"
     system "bash", "bash/index.sh"
-    system "rm", "-rf", "bash"
   end
 end
