@@ -9,9 +9,8 @@ class NowCli < Formula
   depends_on "node" => :build
 
   def install
-    inreplace "package.json" do |s|
-      s.gsub! /^.*"postinstall".*$/, "" # don't run postinstall
-    end
+    # don't run postinstall
+    inreplace("package.json") { |s| s.gsub! /^.*"postinstall".*$/, "" }
 
     system "npm", "install", *Language::Node.local_npm_install_args
     system "npm", "run", "build"
