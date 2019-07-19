@@ -3,8 +3,8 @@ require "language/node"
 class NowCli < Formula
   desc "The command-line interface for Now"
   homepage "https://zeit.co/now"
-  url "https://github.com/zeit/now-cli/archive/15.8.0.tar.gz"
-  sha256 "a0ac758dfe87e67cbfded18d44d8eca657f4ec1767f44ee3b4380738859e836c"
+  url "https://github.com/zeit/now-cli/archive/15.8.3.tar.gz"
+  sha256 "3b6d0a75f41b9ade13d9990d06d137e17c8c6b9d9d5eedbe4b143c62b1460c0b"
 
   depends_on "node" => :build
 
@@ -33,9 +33,9 @@ class NowCli < Formula
 
   test do
     system "#{bin}/now", "init", "bash"
-    assert File.exist?("bash/index.sh")
-    assert File.exist?("bash/now.json")
-    assert File.exist?("bash/README.md")
+    assert_predicate testpath/"bash/index.sh", :exist?, "index.sh must exist"
+    assert_predicate testpath/"bash/now.json", :exist?, "now.json must exist"
+    assert_predicate testpath/"bash/README.md", :exist?, "README.md must exist"
     system "echo", "handler >> bash/index.sh"
     system "bash", "bash/index.sh"
   end
