@@ -63,11 +63,6 @@ class V8 < Formula
     (buildpath/"base/trace_event/common").install resource("v8/base/trace_event/common")
     (buildpath/"third_party/icu").install resource("v8/third_party/icu")
 
-    # workaround for xcode-select --print-path pointing to CLT
-    inreplace buildpath/"build/config/mac/mac_sdk.gni",
-              "\"--print_bin_path\",",
-              "\"--print_bin_path\", \"--developer_dir\", \"#{MacOS::Xcode.bundle_path}\""
-
     # Build gn from source and add it to the PATH
     (buildpath/"gn").install resource("gn")
     cd "gn" do
