@@ -3,17 +3,17 @@ class Emscripten < Formula
   homepage "https://kripken.github.io/emscripten-site/"
 
   stable do
-    url "https://github.com/emscripten-core/emscripten/archive/1.38.44.tar.gz"
-    sha256 "e6bf63595ca28beb4c0385062cd686f1b442d7faa8b3c717fb4cb872478b4660"
+    url "https://github.com/emscripten-core/emscripten/archive/1.38.47.tar.gz"
+    sha256 "3412740c703432274f35a08e00cafa500a2f2effcc455484faee9e786b917b12"
 
-    resource "fastcomp" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp/archive/1.38.44.tar.gz"
-      sha256 "d066f36d1083e5d62e2a9fb24e162e506a6b359fc101c43aec22ba8b1a836a01"
+    resource "llvm" do
+      url "https://github.com/llvm/llvm-project.git",
+        :revision => "12e915b3fcc55b8394dce3105a24c009e516d153"
     end
 
-    resource "fastcomp-clang" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp-clang/archive/1.38.44.tar.gz"
-      sha256 "13aca52d91aba756f8e0610e4a4ebd8147369f4708c7542efdf8a4f96e52f2a1"
+    resource "binaryen" do
+      url "https://github.com/WebAssembly/binaryen.git",
+        :revision => "fc6d2df4eedfef53a0a29fed1ff3ce4707556700"
     end
   end
 
@@ -27,47 +27,76 @@ class Emscripten < Formula
   head do
     url "https://github.com/emscripten-core/emscripten.git", :branch => "incoming"
 
-    resource "fastcomp" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp.git", :branch => "incoming"
+    resource "llvm" do
+      url "https://github.com/llvm/llvm-project.git"
     end
 
-    resource "fastcomp-clang" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp-clang.git", :branch => "incoming"
+    resource "binaryen" do
+      url "https://github.com/WebAssembly/binaryen.git"
     end
   end
 
   depends_on "cmake" => :build
+  depends_on :xcode => :build
+  depends_on "libffi"
+  depends_on "swig"
   depends_on "node"
   depends_on "python"
   depends_on "yuicompressor"
 
   def install
     ENV.cxx11
+    ENV.permit_arch_flags
+    cmake_args = std_cmake_args.reject { |s| s["CMAKE_INSTALL_PREFIX"] }
 
     # All files from the repository are required as emscripten is a collection
     # of scripts which need to be installed in the same layout as in the Git
     # repository.
     libexec.install Dir["*"]
 
-    (buildpath/"fastcomp").install resource("fastcomp")
-    (buildpath/"fastcomp/tools/clang").install resource("fastcomp-clang")
+    (buildpath/"llvm").install resource("llvm")
 
-    cmake_args = std_cmake_args.reject { |s| s["CMAKE_INSTALL_PREFIX"] }
-    cmake_args = [
-      "-DCMAKE_BUILD_TYPE=Release",
-      "-DCMAKE_INSTALL_PREFIX=#{libexec}/llvm",
-      "-DLLVM_TARGETS_TO_BUILD='X86;JSBackend'",
-      "-DLLVM_INCLUDE_EXAMPLES=OFF",
-      "-DLLVM_INCLUDE_TESTS=OFF",
-      "-DCLANG_INCLUDE_TESTS=OFF",
-      "-DOCAMLFIND=/usr/bin/false",
-      "-DGO_EXECUTABLE=/usr/bin/false",
+    # TODO: check for unneeded stuff (which is still turned on)
+    args = cmake_args + %W[
+      -DCMAKE_INSTALL_PREFIX=#{libexec}/llvm
+      -DLIBOMP_ARCH=x86_64
+      -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON
+      -DLLVM_BUILD_LLVM_DYLIB=ON
+      -DLLVM_ENABLE_FFI=ON
+      -DLLVM_ENABLE_LIBCXX=ON
+      -DLLVM_INCLUDE_DOCS=OFF
+      -DLLVM_OPTIMIZED_TABLEGEN=ON
+      -DFFI_INCLUDE_DIR=#{Formula["libffi"].opt_lib}/libffi-#{Formula["libffi"].version}/include
+      -DFFI_LIBRARY_DIR=#{Formula["libffi"].opt_lib}
+      -DLLDB_USE_SYSTEM_DEBUGSERVER=ON
+      -DLLDB_DISABLE_PYTHON=1
+      -DLIBOMP_INSTALL_ALIASES=OFF
+      -DLLVM_ENABLE_PROJECTS='lld;clang'
+      -DLLVM_TARGETS_TO_BUILD='host;WebAssembly'
+      -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON
+      -DLLVM_INCLUDE_EXAMPLES=OFF
+      -DLLVM_INCLUDE_TESTS=OFF
     ]
 
-    mkdir "fastcomp/build" do
-      system "cmake", "..", *cmake_args
+    mkdir "build" do
+      system "cmake", "-G", "Unix Makefiles", "../llvm/llvm", *args
       system "make"
       system "make", "install"
+    end
+
+    (buildpath/"binaryen").install resource("binaryen")
+
+    cd "binaryen" do
+      args = cmake_args + ["-DCMAKE_INSTALL_PREFIX=#{libexec}/binaryen"]
+      system "cmake", ".", *args
+      system "make", "install"
+    end
+
+    inreplace libexec/"tools/settings_template_readonly.py" do |s|
+      s.gsub! "{{{ EMSCRIPTEN_ROOT }}}", opt_libexec
+      s.gsub! "{{{ LLVM_ROOT }}}", opt_libexec/"llvm/bin"
+      s.gsub! "'BINARYEN', ''", "'BINARYEN', '#{opt_libexec/"binaryen/bin"}'"
+      s.gsub! "{{{ NODE }}}", Formula["node"].opt_bin
     end
 
     %w[em++ em-config emar emcc emcmake emconfigure emlink.py emmake
