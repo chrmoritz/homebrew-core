@@ -1,17 +1,26 @@
 class NodeAT12 < Formula
   desc "Platform built on V8 to build network applications"
   homepage "https://nodejs.org/"
-  url "https://nodejs.org/dist/v12.13.0/node-v12.13.0.tar.gz"
-  sha256 "2e5321e095fe673a3ab936cf77faf8c983cba62f27a9fbd00530a7edb739a040"
+  url "https://github.com/nodejs/node/archive/v12.13.1-proposal.tar.gz"
+  sha256 "4baca9895b35bbef71129b7b039bf1731751bac336e29748b575a6d4d6cf11eb"
 
   keg_only :versioned_formula
 
   depends_on "pkg-config" => :build
-  depends_on "python@2" => :build # does not support Python 3
+  depends_on "python" => :build
   depends_on "icu4c"
 
+  # apply upstream Python 3 compatibility fix for macOS (remove with next version)
+  patch do
+    url "https://github.com/nodejs/node/commit/0673dfc0d8944a37e17fbaa683022f4b9e035577.patch?full_index=1"
+    sha256 "a682d597fb63861a3ae812345ade7ad2b1125b3362317e247b4fb52ecd7532be"
+  end
+
   def install
-    system "./configure", "--prefix=#{prefix}", "--with-intl=system-icu"
+    # make sure subprocesses spawned by make are using our Python 3
+    ENV["PYTHON"] = Formula["python"].opt_bin/"python3"
+
+    system "python3", "configure.py", "--prefix=#{prefix}", "--with-intl=system-icu"
     system "make", "install"
   end
 
