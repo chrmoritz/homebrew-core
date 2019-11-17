@@ -34,6 +34,11 @@ class NodeAT10 < Formula
     sha256 ""
   end
 
+  patch do # tools: fix Python 3 issues in gyp/generator/make.py
+    url "https://github.com/nodejs/node/commit/eceebd3ef1f40671073e822910c247a71935cb84.patch?full_index=1"
+    sha256 ""
+  end
+
   patch do # port Python 3 compat patches from node-gyp to gyp
     url "https://github.com/nodejs/node/commit/41430bea3c4f3164133d5d7b57a403670d0dfa43.patch?full_index=1"
     sha256 ""
