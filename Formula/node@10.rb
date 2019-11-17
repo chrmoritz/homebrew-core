@@ -39,6 +39,31 @@ class NodeAT10 < Formula
     sha256 ""
   end
 
+  patch do # gyp: futurize imput.py to prepare for Python 3
+    url "https://github.com/nodejs/node/commit/10bae2ec919b26f2f8be5182f3e751d8e2726ec2.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # tools: make nodedownload.py Python 3 compatible
+    url "https://github.com/nodejs/node/commit/31c50e5c17aaca2389fef65b8bb9c4c3a100585a.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # tools: use 'from io import StringIO' in ninja.py
+    url "https://github.com/nodejs/node/commit/350975e312b706c9185a94cf0e049b994f60ae22.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # gyp: make StringIO work in ninja.py
+    url "https://github.com/nodejs/node/commit/a20a8f48f7b9b8243dd6db03e3fb2cd058208c03.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # tools: fix GYP ninja generator for Python 3
+    url "https://github.com/nodejs/node/commit/2f81d59e754b4564db7a3450280612e4e5f9079a.patch?full_index=1"
+    sha256 ""
+  end
+
   patch do # fix Python 3 syntax error in mac_tool.py
     url "https://github.com/nodejs/node/commit/b6546736a02eb0b52cb4f9a4f5f0383f4b584bfe.patch?full_index=1"
     sha256 ""
@@ -51,6 +76,7 @@ class NodeAT10 < Formula
 
   # build: support py3 for configure.py https://github.com/nodejs/node/commit/0a63e2d9ff13e2a1935c04bbd7d57d39c36c3884
   # python3 support for configure https://github.com/nodejs/node/commit/0415dd7cb3f43849f9d6f1f8d271b39c4649c3de
+  # fix deps/v8/tools/node/* (use print function) from newer V8 versions
   patch :DATA
 
   def install
@@ -229,3 +255,74 @@ index cfd4207..22861a1 100755
 
  def get_gas_version(cc):
    try:
+diff --git a/deps/v8/tools/node/fetch_deps.py b/deps/v8/tools/node/fetch_deps.py
+index 26b9d6a..8bc2133 100755
+--- a/deps/v8/tools/node/fetch_deps.py
++++ b/deps/v8/tools/node/fetch_deps.py
+@@ -51,9 +51,9 @@ def EnsureGit(v8_path):
+   expected_git_dir = os.path.join(v8_path, ".git")
+   actual_git_dir = git("rev-parse --absolute-git-dir")
+   if expected_git_dir == actual_git_dir:
+-    print "V8 is tracked stand-alone by git."
++    print("V8 is tracked stand-alone by git.")
+     return False
+-  print "Initializing temporary git repository in v8."
++  print("Initializing temporary git repository in v8.")
+   git("init")
+   git("config user.name \"Ada Lovelace\"")
+   git("config user.email ada@lovela.ce")
+@@ -70,7 +70,7 @@ def FetchDeps(v8_path):
+
+   temporary_git = EnsureGit(v8_path)
+   try:
+-    print "Fetching dependencies."
++    print("Fetching dependencies.")
+     env = os.environ.copy()
+     # gclient needs to have depot_tools in the PATH.
+     env["PATH"] = depot_tools + os.pathsep + env["PATH"]
+
+
+diff --git a/deps/v8/tools/node/node_common.py b/deps/v8/tools/node/node_common.py
+index de2e98d..860c606 100755
+--- a/deps/v8/tools/node/node_common.py
++++ b/deps/v8/tools/node/node_common.py
+@@ -22,7 +22,7 @@ def EnsureDepotTools(v8_path, fetch_if_not_exist):
+     except:
+       pass
+     if fetch_if_not_exist:
+-      print "Checking out depot_tools."
++      print("Checking out depot_tools.")
+       # shell=True needed on Windows to resolve git.bat.
+       subprocess.check_call("git clone {} {}".format(
+           pipes.quote(DEPOT_TOOLS_URL),
+@@ -31,14 +31,14 @@ def EnsureDepotTools(v8_path, fetch_if_not_exist):
+     return None
+   depot_tools = _Get(v8_path)
+   assert depot_tools is not None
+-  print "Using depot tools in %s" % depot_tools
++  print("Using depot tools in %s" % depot_tools)
+   return depot_tools
+
+ def UninitGit(v8_path):
+-  print "Uninitializing temporary git repository"
++  print("Uninitializing temporary git repository")
+   target = os.path.join(v8_path, ".git")
+   if os.path.isdir(target):
+-    print ">> Cleaning up %s" % target
++    print(">> Cleaning up %s" % target)
+     def OnRmError(func, path, exec_info):
+       # This might happen on Windows
+       os.chmod(path, stat.S_IWRITE)
+diff --git a/deps/v8/gypfiles/toolchain.gypi b/deps/v8/gypfiles/toolchain.gypi
+index fbf6832..1829ebe 100644
+--- a/deps/v8/gypfiles/toolchain.gypi
++++ b/deps/v8/gypfiles/toolchain.gypi
+@@ -41,7 +41,7 @@
+     'has_valgrind%': 0,
+     'coverage%': 0,
+     'v8_target_arch%': '<(target_arch)',
+-    'v8_host_byteorder%': '<!(python -c "import sys; print sys.byteorder")',
++    'v8_host_byteorder%': '<!(python -c "import sys; print(sys.byteorder)")',
+     'force_dynamic_crt%': 0,
+
+     # Setting 'v8_can_use_vfp32dregs' to 'true' will cause V8 to use the VFP
