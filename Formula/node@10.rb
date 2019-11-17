@@ -524,3 +524,16 @@ index 60f6ee0..0ca7515 100644
    },
    'targets': [
      {
+diff --git a/tools/gyp/pylib/gyp/input.py b/tools/gyp/pylib/gyp/input.py
+index a571b07..913f13d 100644
+--- a/tools/gyp/pylib/gyp/input.py
++++ b/tools/gyp/pylib/gyp/input.py
+@@ -2284,7 +2284,7 @@ def SetUpConfigurations(target, target_dict):
+         merged_configurations[configuration])
+
+   # Now drop all the abstract ones.
+-  for configuration in target_dict['configurations'].keys():
++  for configuration in list(target_dict['configurations']):
+     old_configuration_dict = target_dict['configurations'][configuration]
+     if old_configuration_dict.get('abstract'):
+       del target_dict['configurations'][configuration]
