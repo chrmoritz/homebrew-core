@@ -14,7 +14,7 @@ class NodeAT10 < Formula
   keg_only :versioned_formula
 
   depends_on "pkg-config" => :build
-  depends_on "python@2" => :build # does not support Python 3
+  depends_on "python" => :build # does not support Python 3
   depends_on "icu4c"
 
   # Fixes detecting Apple clang 11.
@@ -23,8 +23,47 @@ class NodeAT10 < Formula
     sha256 "12d8af6647e9a5d81f68f610ad0ed17075bf14718f4d484788baac37a0d3f842"
   end
 
+  # apply upstream Python 3 compatibility patches
+  patch do # gyp: pull Python 3 changes from node/node-gyp
+    url "https://github.com/nodejs/node/commit/b1db810d501079f767579a241c3f613e8a204294.patch?full_index=1"
+    sha256 "cb1d581c5de37b3b21a9f8332a9574a9687f49cfc618bb4e5c34381b210c57e1"
+  end
+
+  patch do # gyp: cherrypick more Python3 changes from node-gyp
+    url "https://github.com/nodejs/node/commit/d630cc0ec5cac7d31d1fd9fa9f4661a53e51a590.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # port Python 3 compat patches from node-gyp to gyp
+    url "https://github.com/nodejs/node/commit/41430bea3c4f3164133d5d7b57a403670d0dfa43.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # fix Python 3 syntax error in mac_tool.py
+    url "https://github.com/nodejs/node/commit/b6546736a02eb0b52cb4f9a4f5f0383f4b584bfe.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # pull xcode_emulation.py from node-gyp
+    url "https://github.com/nodejs/node/commit/b9fd18f9fbed13cd2538f46e0072c923cbfd95cd.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # build: support py3 for configure.py
+    url "https://github.com/nodejs/node/commit/0a63e2d9ff13e2a1935c04bbd7d57d39c36c3884.patch?full_index=1"
+    sha256 ""
+  end
+
+  patch do # python3 support for configure
+    url "https://github.com/nodejs/node/commit/0415dd7cb3f43849f9d6f1f8d271b39c4649c3de.patch?full_index=1"
+    sha256 ""
+  end
+
   def install
-    system "./configure", "--prefix=#{prefix}", "--with-intl=system-icu"
+    # make sure subprocesses spawned by make are using our Python 3
+    ENV["PYTHON"] = Formula["python"].opt_bin/"python3"
+
+    system "python3", "configure.py", "--prefix=#{prefix}", "--with-intl=system-icu"
     system "make", "install"
   end
 
