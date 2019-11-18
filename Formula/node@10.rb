@@ -82,6 +82,7 @@ class NodeAT10 < Formula
   # build: support py3 for configure.py https://github.com/nodejs/node/commit/0a63e2d9ff13e2a1935c04bbd7d57d39c36c3884
   # python3 support for configure https://github.com/nodejs/node/commit/0415dd7cb3f43849f9d6f1f8d271b39c4649c3de
   # build: always use strings for compiler version in gyp files https://github.com/nodejs/node/commit/ca10dff0cb23342ba512ae2495291e6457a54edb
+  # deps: V8: cherry-pick e3d7f8a [build] update gen-postmortem-metadata for Python 3 https://github.com/nodejs/node/commit/a17d398989b9606e4fdc188cb5988cd669ce5edd
   # fix deps/v8/tools/node/* (use print function) from newer V8 versions
   patch :DATA
 
@@ -542,3 +543,38 @@ index a571b07..913f13d 100644
      old_configuration_dict = target_dict['configurations'][configuration]
      if old_configuration_dict.get('abstract'):
        del target_dict['configurations'][configuration]
+diff --git a/deps/v8/tools/gen-postmortem-metadata.py b/deps/v8/tools/gen-postmortem-metadata.py
+index db4c6c236580..b5aba23220ba 100644
+--- a/deps/v8/tools/gen-postmortem-metadata.py
++++ b/deps/v8/tools/gen-postmortem-metadata.py
+@@ -624,7 +619,7 @@ def emit_set(out, consts):
+ # Emit the whole output file.
+ #
+ def emit_config():
+-        out = file(sys.argv[1], 'w');
++        out = open(sys.argv[1], 'w');
+
+         out.write(header);
+
+@@ -653,9 +653,7 @@ def emit_config():
+
+         out.write('/* class type information */\n');
+         consts = [];
+-        keys = typeclasses.keys();
+-        keys.sort();
+-        for typename in keys:
++        for typename in sorted(typeclasses):
+                 klass = typeclasses[typename];
+                 consts.append({
+                     'name': 'type_%s__%s' % (klass, typename),
+@@ -666,9 +664,7 @@ def emit_config():
+
+         out.write('/* class hierarchy information */\n');
+         consts = [];
+-        keys = klasses.keys();
+-        keys.sort();
+-        for klassname in keys:
++        for klassname in sorted(klasses):
+                 pklass = klasses[klassname]['parent'];
+                 bklass = get_base_class(klassname);
+                 if (bklass != 'Object'):
