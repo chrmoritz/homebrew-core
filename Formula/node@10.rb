@@ -39,8 +39,8 @@ class NodeAT10 < Formula
     sha256 ""
   end
 
-  patch do # port Python 3 compat patches from node-gyp to gyp
-    url "https://github.com/nodejs/node/commit/41430bea3c4f3164133d5d7b57a403670d0dfa43.patch?full_index=1"
+  patch do # tools: port Python 3 compat patches from node-gyp to gyp
+    url "https://github.com/nodejs/node/commit/66b953207d6f0e9c98155af97147a731b2e461bd.patch?full_index=1"
     sha256 ""
   end
 
@@ -69,13 +69,13 @@ class NodeAT10 < Formula
     sha256 ""
   end
 
-  patch do # fix Python 3 syntax error in mac_tool.py
-    url "https://github.com/nodejs/node/commit/b6546736a02eb0b52cb4f9a4f5f0383f4b584bfe.patch?full_index=1"
+  patch do # tools: fix Python 3 syntax error in mac_tool.py
+    url "https://github.com/nodejs/node/commit/9529c6660f5cc0de106a60f78d9dbafb6ccea26a.patch?full_index=1"
     sha256 ""
   end
 
-  patch do # pull xcode_emulation.py from node-gyp
-    url "https://github.com/nodejs/node/commit/b9fd18f9fbed13cd2538f46e0072c923cbfd95cd.patch?full_index=1"
+  patch do # tools: pull xcode_emulation.py from node-gyp
+    url "https://github.com/nodejs/node/commit/0673dfc0d8944a37e17fbaa683022f4b9e035577.patch?full_index=1"
     sha256 ""
   end
 
