@@ -14,7 +14,7 @@ class NodeAT10 < Formula
   keg_only :versioned_formula
 
   depends_on "pkg-config" => :build
-  depends_on "python@2" => :build # does not support Python 3
+  depends_on "python" => :build
   depends_on "icu4c"
 
   # Fixes detecting Apple clang 11.
@@ -23,8 +23,67 @@ class NodeAT10 < Formula
     sha256 "12d8af6647e9a5d81f68f610ad0ed17075bf14718f4d484788baac37a0d3f842"
   end
 
+  # apply upstream Python 3 compatibility patches
+  patch do # gyp: pull Python 3 changes from node/node-gyp
+    url "https://github.com/nodejs/node/commit/b1db810d501079f767579a241c3f613e8a204294.patch?full_index=1"
+    sha256 "cb1d581c5de37b3b21a9f8332a9574a9687f49cfc618bb4e5c34381b210c57e1"
+  end
+
+  patch do # gyp: cherrypick more Python3 changes from node-gyp
+    url "https://github.com/nodejs/node/commit/d630cc0ec5cac7d31d1fd9fa9f4661a53e51a590.patch?full_index=1"
+    sha256 "5fb67bbd49b23b589383b24cab21ca6ca5143c0d01f048d2777f9f57cf75e5fb"
+  end
+
+  patch do # tools: fix Python 3 issues in gyp/generator/make.py
+    url "https://github.com/nodejs/node/commit/eceebd3ef1f40671073e822910c247a71935cb84.patch?full_index=1"
+    sha256 "738cebf393103665d8ea53c0581ee204575fabadd89dc01db2911d8182ab077f"
+  end
+
+  patch do # tools: port Python 3 compat patches from node-gyp to gyp
+    url "https://github.com/nodejs/node/commit/66b953207d6f0e9c98155af97147a731b2e461bd.patch?full_index=1"
+    sha256 "e677e8a81e0b59dc744fd833f102f8a3581f9c1937ab99d3bc0a1f5acbb34b58"
+  end
+
+  patch do # gyp: futurize imput.py to prepare for Python 3
+    url "https://github.com/nodejs/node/commit/10bae2ec919b26f2f8be5182f3e751d8e2726ec2.patch?full_index=1"
+    sha256 "f08da2850679ab0442a5911772da362ce0449571af0fac7c73db6a69323acd27"
+  end
+
+  patch do # tools: make nodedownload.py Python 3 compatible
+    url "https://github.com/nodejs/node/commit/31c50e5c17aaca2389fef65b8bb9c4c3a100585a.patch?full_index=1"
+    sha256 "77922e9d785d6ab1d7f0b34741e2770a22c65e7c6184cf78ced14c2404e3c1f1"
+  end
+
+  patch do # tools: use 'from io import StringIO' in ninja.py
+    url "https://github.com/nodejs/node/commit/350975e312b706c9185a94cf0e049b994f60ae22.patch?full_index=1"
+    sha256 "8d486403a7e6d92cf6d95e4a54298218b4d1cf6861bd1e87b41abb7266847439"
+  end
+
+  patch do # gyp: make StringIO work in ninja.py
+    url "https://github.com/nodejs/node/commit/a20a8f48f7b9b8243dd6db03e3fb2cd058208c03.patch?full_index=1"
+    sha256 "8ccb2cd1d6c8c9b8847aecf97896a268f457074899968080a5ac6c9f36a1b061"
+  end
+
+  patch do # tools: fix GYP ninja generator for Python 3
+    url "https://github.com/nodejs/node/commit/2f81d59e754b4564db7a3450280612e4e5f9079a.patch?full_index=1"
+    sha256 "60f425b69de8f6516238f486de1d010ff34818234900656118528b025b3a9e57"
+  end
+
+  patch do # tools: pull xcode_emulation.py from node-gyp
+    url "https://github.com/nodejs/node/commit/0673dfc0d8944a37e17fbaa683022f4b9e035577.patch?full_index=1"
+    sha256 "a682d597fb63861a3ae812345ade7ad2b1125b3362317e247b4fb52ecd7532be"
+  end
+
+  # build: support py3 for configure.py https://github.com/nodejs/node/commit/0a63e2d9ff13e2a1935c04bbd7d57d39c36c3884
+  # python3 support for configure https://github.com/nodejs/node/commit/0415dd7cb3f43849f9d6f1f8d271b39c4649c3de
+  # build: always use strings for compiler version in gyp files https://github.com/nodejs/node/commit/ca10dff0cb23342ba512ae2495291e6457a54edb
+  patch :DATA
+
   def install
-    system "./configure", "--prefix=#{prefix}", "--with-intl=system-icu"
+    # make sure subprocesses spawned by make are using our Python 3
+    ENV["PYTHON"] = Formula["python"].opt_bin/"python3"
+
+    system "python3", "configure.py", "--prefix=#{prefix}", "--with-intl=system-icu"
     system "make", "install"
   end
 
@@ -58,3 +117,268 @@ class NodeAT10 < Formula
     assert_match "< hello >", shell_output("#{bin}/npx cowsay hello")
   end
 end
+
+__END__
+diff --git a/configure.py b/configure.py
+index 22861a1..2e35801 100755
+--- a/configure.py
++++ b/configure.py
+@@ -11,7 +11,7 @@ import re
+ import shlex
+ import subprocess
+ import shutil
+-import string
++import io
+ from distutils.spawn import find_executable as which
+
+ # If not run from node/, cd to node/.
+@@ -616,11 +616,10 @@ def print_verbose(x):
+
+ def b(value):
+   """Returns the string 'true' if value is truthy, 'false' otherwise."""
+-  if value:
+-    return 'true'
+-  else:
+-    return 'false'
++  return 'true' if value else 'false'
+
++def to_utf8(s):
++  return s if isinstance(s, str) else s.decode("utf-8")
+
+ def pkg_config(pkg):
+   """Run pkg-config on the specified package
+@@ -634,7 +633,7 @@ def pkg_config(pkg):
+       proc = subprocess.Popen(
+           shlex.split(pkg_config) + ['--silence-errors', flag, pkg],
+           stdout=subprocess.PIPE)
+-      val = proc.communicate()[0].strip()
++      val = to_utf8(proc.communicate()[0]).strip()
+     except OSError as e:
+       if e.errno != errno.ENOENT: raise e  # Unexpected error.
+       return (None, None, None, None)  # No pkg-config/pkgconf installed.
+@@ -649,10 +648,10 @@ def try_check_compiler(cc, lang):
+   except OSError:
+     return (False, False, '', '')
+
+-  proc.stdin.write('__clang__ __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__ '
+-                   '__clang_major__ __clang_minor__ __clang_patchlevel__')
++  proc.stdin.write(b'__clang__ __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__ '
++                   b'__clang_major__ __clang_minor__ __clang_patchlevel__')
+
+-  values = (proc.communicate()[0].split() + ['0'] * 7)[0:7]
++  values = (to_utf8(proc.communicate()[0]).split() + ['0'] * 7)[0:7]
+   is_clang = values[0] == '1'
+   gcc_version = tuple(map(int, values[1:1+3]))
+   clang_version = tuple(map(int, values[4:4+3])) if is_clang else None
+@@ -677,12 +676,12 @@ def get_version_helper(cc, regexp):
+        consider adjusting the CC environment variable if you installed
+        it in a non-standard prefix.''')
+
+-  match = re.search(regexp, proc.communicate()[1])
++  match = re.search(regexp, to_utf8(proc.communicate()[1]))
+
+   if match:
+     return match.group(2)
+   else:
+-    return '0'
++    return '0.0'
+
+ def get_nasm_version(asm):
+   try:
+@@ -693,15 +692,15 @@ def get_nasm_version(asm):
+     warn('''No acceptable ASM compiler found!
+          Please make sure you have installed NASM from http://www.nasm.us
+          and refer BUILDING.md.''')
+-    return '0'
++    return '0.0'
+
+   match = re.match(r"NASM version ([2-9]\.[0-9][0-9]+)",
+-                   proc.communicate()[0])
++                   to_utf8(proc.communicate()[0]))
+
+   if match:
+     return match.group(1)
+   else:
+-    return '0'
++    return '0.0'
+
+ def get_llvm_version(cc):
+   return get_version_helper(
+@@ -727,14 +726,14 @@ def get_gas_version(cc):
+        consider adjusting the CC environment variable if you installed
+        it in a non-standard prefix.''')
+
+-  gas_ret = proc.communicate()[1]
++  gas_ret = to_utf8(proc.communicate()[1])
+   match = re.match(r"GNU assembler version ([2-9]\.[0-9]+)", gas_ret)
+
+   if match:
+     return match.group(1)
+   else:
+     warn('Could not recognize `gas`: ' + gas_ret)
+-    return '0'
++    return '0.0'
+
+ # Note: Apple clang self-reports as clang 4.2.0 and gcc 4.2.1.  It passes
+ # the version check more by accident than anything else but a more rigorous
+@@ -745,7 +744,7 @@ def check_compiler(o):
+     if not options.openssl_no_asm and options.dest_cpu in ('x86', 'x64'):
+       nasm_version = get_nasm_version('nasm')
+       o['variables']['nasm_version'] = nasm_version
+-      if nasm_version == 0:
++      if nasm_version == '0.0':
+         o['variables']['openssl_no_asm'] = 1
+     return
+
+@@ -766,7 +765,7 @@ def check_compiler(o):
+     # to a version that is not completely ancient.
+     warn('C compiler too old, need gcc 4.2 or clang 3.2 (CC=%s)' % CC)
+
+-  o['variables']['llvm_version'] = get_llvm_version(CC) if is_clang else 0
++  o['variables']['llvm_version'] = get_llvm_version(CC) if is_clang else '0.0'
+
+   # Need xcode_version or gas_version when openssl asm files are compiled.
+   if options.without_ssl or options.openssl_no_asm or options.shared_openssl:
+@@ -794,10 +793,8 @@ def cc_macros(cc=None):
+        consider adjusting the CC environment variable if you installed
+        it in a non-standard prefix.''')
+
+-  p.stdin.write('\n')
+-  out = p.communicate()[0]
+-
+-  out = str(out).split('\n')
++  p.stdin.write(b'\n')
++  out = to_utf8(p.communicate()[0]).split('\n')
+
+   k = {}
+   for line in out:
+@@ -1351,7 +1348,7 @@ def configure_intl(o):
+     o['variables']['icu_small'] = b(True)
+     locs = set(options.with_icu_locales.split(','))
+     locs.add('root')  # must have root
+-    o['variables']['icu_locales'] = string.join(locs,',')
++    o['variables']['icu_locales'] = ','.join(str(loc) for loc in locs)
+     # We will check a bit later if we can use the canned deps/icu-small
+   elif with_intl == 'full-icu':
+     # full ICU
+@@ -1482,16 +1479,17 @@ def configure_intl(o):
+   icu_ver_major = None
+   matchVerExp = r'^\s*#define\s+U_ICU_VERSION_SHORT\s+"([^"]*)".*'
+   match_version = re.compile(matchVerExp)
+-  for line in open(uvernum_h).readlines():
+-    m = match_version.match(line)
+-    if m:
+-      icu_ver_major = m.group(1)
++  with io.open(uvernum_h, encoding='utf8') as in_file:
++    for line in in_file:
++      m = match_version.match(line)
++      if m:
++        icu_ver_major = str(m.group(1))
+   if not icu_ver_major:
+     error('Could not read U_ICU_VERSION_SHORT version from %s' % uvernum_h)
+   elif int(icu_ver_major) < icu_versions['minimum_icu']:
+     error('icu4c v%s.x is too old, v%d.x or later is required.' %
+           (icu_ver_major, icu_versions['minimum_icu']))
+-  icu_endianness = sys.byteorder[0];
++  icu_endianness = sys.byteorder[0]
+   o['variables']['icu_ver_major'] = icu_ver_major
+   o['variables']['icu_endianness'] = icu_endianness
+   icu_data_file_l = 'icudt%s%s.dat' % (icu_ver_major, 'l')
+diff --git a/deps/openssl/openssl.gyp b/deps/openssl/openssl.gyp
+index 60f6ee0..0ca7515 100644
+--- a/deps/openssl/openssl.gyp
++++ b/deps/openssl/openssl.gyp
+@@ -1,8 +1,8 @@
+ {
+   'variables': {
+-    'gas_version%': 0,
+-    'llvm_version%': 0,
+-    'nasm_version%': 0,
++    'gas_version%': '0.0',
++    'llvm_version%': '0.0',
++    'nasm_version%': '0.0',
+   },
+   'targets': [
+     {
+diff --git a/deps/v8/gypfiles/toolchain.gypi b/deps/v8/gypfiles/toolchain.gypi
+index fbf6832..1829ebe 100644
+--- a/deps/v8/gypfiles/toolchain.gypi
++++ b/deps/v8/gypfiles/toolchain.gypi
+@@ -41,7 +41,7 @@
+     'has_valgrind%': 0,
+     'coverage%': 0,
+     'v8_target_arch%': '<(target_arch)',
+-    'v8_host_byteorder%': '<!(python -c "import sys; print sys.byteorder")',
++    'v8_host_byteorder%': '<!(python -c "import sys; print(sys.byteorder)")',
+     'force_dynamic_crt%': 0,
+
+     # Setting 'v8_can_use_vfp32dregs' to 'true' will cause V8 to use the VFP
+diff --git a/deps/v8/tools/node/fetch_deps.py b/deps/v8/tools/node/fetch_deps.py
+index 26b9d6a..8bc2133 100755
+--- a/deps/v8/tools/node/fetch_deps.py
++++ b/deps/v8/tools/node/fetch_deps.py
+@@ -51,9 +51,9 @@ def EnsureGit(v8_path):
+   expected_git_dir = os.path.join(v8_path, ".git")
+   actual_git_dir = git("rev-parse --absolute-git-dir")
+   if expected_git_dir == actual_git_dir:
+-    print "V8 is tracked stand-alone by git."
++    print("V8 is tracked stand-alone by git.")
+     return False
+-  print "Initializing temporary git repository in v8."
++  print("Initializing temporary git repository in v8.")
+   git("init")
+   git("config user.name \"Ada Lovelace\"")
+   git("config user.email ada@lovela.ce")
+@@ -70,7 +70,7 @@ def FetchDeps(v8_path):
+
+   temporary_git = EnsureGit(v8_path)
+   try:
+-    print "Fetching dependencies."
++    print("Fetching dependencies.")
+     env = os.environ.copy()
+     # gclient needs to have depot_tools in the PATH.
+     env["PATH"] = depot_tools + os.pathsep + env["PATH"]
+diff --git a/deps/v8/tools/node/node_common.py b/deps/v8/tools/node/node_common.py
+index de2e98d..860c606 100755
+--- a/deps/v8/tools/node/node_common.py
++++ b/deps/v8/tools/node/node_common.py
+@@ -22,7 +22,7 @@ def EnsureDepotTools(v8_path, fetch_if_not_exist):
+     except:
+       pass
+     if fetch_if_not_exist:
+-      print "Checking out depot_tools."
++      print("Checking out depot_tools.")
+       # shell=True needed on Windows to resolve git.bat.
+       subprocess.check_call("git clone {} {}".format(
+           pipes.quote(DEPOT_TOOLS_URL),
+@@ -31,14 +31,14 @@ def EnsureDepotTools(v8_path, fetch_if_not_exist):
+     return None
+   depot_tools = _Get(v8_path)
+   assert depot_tools is not None
+-  print "Using depot tools in %s" % depot_tools
++  print("Using depot tools in %s" % depot_tools)
+   return depot_tools
+
+ def UninitGit(v8_path):
+-  print "Uninitializing temporary git repository"
++  print("Uninitializing temporary git repository")
+   target = os.path.join(v8_path, ".git")
+   if os.path.isdir(target):
+-    print ">> Cleaning up %s" % target
++    print(">> Cleaning up %s" % target)
+     def OnRmError(func, path, exec_info):
+       # This might happen on Windows
+       os.chmod(path, stat.S_IWRITE)
+diff --git a/tools/gyp/pylib/gyp/input.py b/tools/gyp/pylib/gyp/input.py
+index a571b07..913f13d 100644
+--- a/tools/gyp/pylib/gyp/input.py
++++ b/tools/gyp/pylib/gyp/input.py
+@@ -2284,7 +2284,7 @@ def SetUpConfigurations(target, target_dict):
+         merged_configurations[configuration])
+
+   # Now drop all the abstract ones.
+-  for configuration in target_dict['configurations'].keys():
++  for configuration in list(target_dict['configurations']):
+     old_configuration_dict = target_dict['configurations'][configuration]
+     if old_configuration_dict.get('abstract'):
+       del target_dict['configurations'][configuration]
