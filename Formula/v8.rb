@@ -2,8 +2,8 @@ class V8 < Formula
   desc "Google's JavaScript engine"
   homepage "https://github.com/v8/v8/wiki"
   # Track V8 version from Chrome stable: https://omahaproxy.appspot.com
-  url "https://github.com/v8/v8/archive/7.8.279.23.tar.gz"
-  sha256 "00857a609670234cae963a3866edd8ff826f0a98ebbb59a44ab8e656ff3e746c"
+  url "https://github.com/v8/v8/archive/8.0.428.tar.gz"
+  sha256 "d1374ed323a99ebb8b98a247938ae2528fa4e21d3588c5f70467b8109462e30a"
 
   bottle do
     cellar :any
@@ -21,18 +21,18 @@ class V8 < Formula
   # e.g. for CIPD dependency gn: https://github.com/v8/v8/blob/7.6.303.27/DEPS#L15
   resource "gn" do
     url "https://gn.googlesource.com/gn.git",
-      :revision => "152c5144ceed9592c20f0c8fd55769646077569b"
+      :revision => "ad9e442d92dcd9ee73a557428cfc336b55cbd533"
   end
 
   # e.g.: https://github.com/v8/v8/blob/7.6.303.27/DEPS#L60 for the revision of build for v8 7.6.303.27
   resource "v8/build" do
     url "https://chromium.googlesource.com/chromium/src/build.git",
-      :revision => "693faeda4ee025796c7e473d953a5a7b6ad64c93"
+      :revision => "e35470d98289c1f82179839d7657d45b59e982c9"
   end
 
   resource "v8/third_party/icu" do
     url "https://chromium.googlesource.com/chromium/deps/icu.git",
-      :revision => "53f6b233a41ec982d8445996247093f7aaf41639"
+      :revision => "dbd3825b31041d782c5b504c59dcfb5ac7dda08c"
   end
 
   resource "v8/base/trace_event/common" do
@@ -42,7 +42,7 @@ class V8 < Formula
 
   resource "v8/third_party/googletest/src" do
     url "https://chromium.googlesource.com/external/github.com/google/googletest.git",
-      :revision => "565f1b848215b77c3732bca345fe76a0431d8b34"
+      :revision => "5395345ca4f0c596110188688ed990e0de5a181c"
   end
 
   resource "v8/third_party/jinja2" do
@@ -55,6 +55,11 @@ class V8 < Formula
       :revision => "8f45f5cfa0009d2a70589bcda0349b8cb2b72783"
   end
 
+  resource "v8/third_party/zlib" do
+    url "https://chromium.googlesource.com/chromium/src/third_party/zlib.git",
+      :revision => "e77e1c06c8881abff0c7418368d147ff4a474d08"
+  end
+
   def install
     (buildpath/"build").install resource("v8/build")
     (buildpath/"third_party/jinja2").install resource("v8/third_party/jinja2")
@@ -62,6 +67,7 @@ class V8 < Formula
     (buildpath/"third_party/googletest/src").install resource("v8/third_party/googletest/src")
     (buildpath/"base/trace_event/common").install resource("v8/base/trace_event/common")
     (buildpath/"third_party/icu").install resource("v8/third_party/icu")
+    (buildpath/"third_party/zlib").install resource("v8/third_party/zlib")
 
     # Build gn from source and add it to the PATH
     (buildpath/"gn").install resource("gn")
