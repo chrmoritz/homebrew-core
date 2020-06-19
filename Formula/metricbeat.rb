@@ -2,8 +2,8 @@ class Metricbeat < Formula
   desc "Collect metrics from your systems and services"
   homepage "https://www.elastic.co/products/beats/metricbeat"
   url "https://github.com/elastic/beats.git",
-      :tag      => "v7.7.1",
-      :revision => "932b273e8940575e15f10390882be205bad29e1f"
+      :tag      => "v7.8.0",
+      :revision => "f79387d32717d79f689d94fda1ec80b2cf285d30"
   head "https://github.com/elastic/beats.git"
 
   bottle do
@@ -41,19 +41,16 @@ class Metricbeat < Formula
     cd "src/github.com/elastic/beats/metricbeat" do
       # don't build docs because it would fail creating the combined OSS/x-pack
       # docs and we aren't installing them anyway
-      inreplace "Makefile", "collect: assets collect-docs configs kibana imports",
-                            "collect: assets configs kibana imports"
+      inreplace "magefile.go", "mg.Deps(CollectDocs, FieldsDocs)", ""
 
       system "make", "mage"
-      # prevent downloading binary wheels during python setup
-      system "make", "PIP_INSTALL_COMMANDS=--no-binary :all", "python-env"
       system "mage", "-v", "build"
       ENV.deparallelize
       system "mage", "-v", "update"
 
       (etc/"metricbeat").install Dir["metricbeat.*", "fields.yml", "modules.d"]
       (libexec/"bin").install "metricbeat"
-      prefix.install "_meta/kibana.generated"
+      prefix.install "build/kibana"
     end
 
     prefix.install_metafiles buildpath/"src/github.com/elastic/beats"
